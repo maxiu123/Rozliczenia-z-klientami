@@ -1,0 +1,2220 @@
+﻿```html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>System Rozliczeń Czasu, Zadań i Wydatków (PWA)</title>
+<style>
+  :root {
+    --bg: #fffbf5;
+    --surface: #ffffff;
+    --surface-alt: #fef3c7;
+    --surface-soft: #fff7ed;
+    --text: #1c1917;
+    --text-muted: #57534e;
+    --border: #fed7aa;
+    --primary: #d97706;
+    --primary-dark: #b45309;
+    --terracotta: #c2410c;
+    --success: #15803d;
+    --success-bg: #dcfce7;
+    --danger: #b91c1c;
+    --danger-bg: #fee2e2;
+    --shadow: 0 4px 14px rgba(180, 83, 9, 0.08);
+    --radius: 16px;
+  }
+
+
+  body.dark {
+    --bg: #1c1917;
+    --surface: #292524;
+    --surface-alt: #451a03;
+    --surface-soft: #362f2c;
+    --text: #fafaf9;
+    --text-muted: #a8a29e;
+    --border: #57534e;
+    --primary: #f59e0b;
+    --primary-dark: #d97706;
+    --terracotta: #ea580c;
+    --success: #4ade80;
+    --success-bg: #14532d;
+    --danger: #f87171;
+    --danger-bg: #7f1d1d;
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+
+  /* GÓRNY NAGŁÓWEK */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    box-shadow: var(--shadow);
+  }
+
+
+  .topbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+
+  .brand-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--terracotta), var(--primary));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+
+  .brand-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+  }
+
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+
+  .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    display: inline-block;
+  }
+
+
+  .owner-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+
+  select, input, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-soft);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+
+  select:focus, input:focus, textarea:focus {
+    border-color: var(--primary);
+  }
+
+
+  .client-select {
+    min-width: 210px;
+    max-width: 100%;
+    font-weight: 700;
+    background: var(--surface-alt);
+  }
+
+
+  /* PRZYCISKI */
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    transition: transform 0.08s, opacity 0.15s;
+    user-select: none;
+  }
+
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--terracotta), var(--primary));
+    color: #fff;
+  }
+
+
+  .btn-secondary {
+    background: var(--surface-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+
+
+  .btn-success {
+    background: #15803d;
+    color: #fff;
+  }
+
+
+  .btn-sm {
+    padding: 7px 11px;
+    min-height: 34px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+
+  /* UKŁAD GŁÓWNY (TABLET SIDEBAR + CONTENT) */
+  .app-layout {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex: 1;
+    padding: 16px;
+    gap: 18px;
+    padding-bottom: 88px;
+  }
+
+
+  .sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+
+  @media (min-width: 768px) {
+    .sidebar {
+      display: flex;
+    }
+    .bottom-nav {
+      display: none !important;
+    }
+    .app-layout {
+      padding-bottom: 24px;
+    }
+  }
+
+
+  .nav-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+
+
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--terracotta), var(--primary));
+    color: #fff;
+    border-color: transparent;
+  }
+
+
+  /* DOLNA NAWIGACJA MOBILNA */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 6px 8px;
+    gap: 4px;
+    z-index: 30;
+    box-shadow: 0 -4px 14px rgba(0,0,0,0.06);
+  }
+
+
+  .bnav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 4px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+
+
+  .bnav-btn.active {
+    background: var(--surface-alt);
+    color: var(--terracotta);
+  }
+
+
+  .bnav-icon {
+    font-size: 18px;
+  }
+
+
+  /* TREŚĆ GŁÓWNA I KARTY */
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+
+  /* SIATKI FORMULARZY */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+
+  @media (min-width: 600px) {
+    .form-grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .form-grid-3 {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
+
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+
+  .field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+
+  /* STOPER */
+  .stopwatch-box {
+    background: linear-gradient(135deg, var(--surface-soft), var(--surface-alt));
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+
+  .stopwatch-time {
+    font-size: 38px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--terracotta);
+    letter-spacing: 1px;
+    margin: 6px 0 14px;
+  }
+
+
+  .stopwatch-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+
+  /* LISTY POZYCJI */
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+
+  .list-item {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+
+  .list-item.clickable {
+    cursor: pointer;
+  }
+
+
+  .list-item.clickable:hover {
+    border-color: var(--primary);
+  }
+
+
+  .item-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+
+  .item-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+
+  .item-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+
+  .item-amount {
+    font-weight: 800;
+    font-size: 15px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface-alt);
+    color: var(--terracotta);
+  }
+
+
+  .badge-green {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+
+  .badge-red {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+
+
+  /* PARAGONY / ZAŁĄCZNIKI */
+  .receipt-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+
+  .receipt-preview-strip {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-soft);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px dashed var(--primary);
+  }
+
+
+  .receipt-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+
+  /* BILANS I KARTY FINANSOWE */
+  .currency-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--surface-alt);
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+  }
+
+
+  .cur-pills {
+    display: flex;
+    gap: 6px;
+  }
+
+
+  .cur-pill {
+    padding: 7px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+
+  .cur-pill.active {
+    background: var(--terracotta);
+    color: #fff;
+    border-color: var(--terracotta);
+  }
+
+
+  .balance-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+
+  @media (min-width: 650px) {
+    .balance-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+
+  .bal-card {
+    border-radius: 16px;
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    background: linear-gradient(145deg, var(--surface), var(--surface-soft));
+  }
+
+
+  .bal-card.total-highlight {
+    background: linear-gradient(135deg, #9a3412, #d97706);
+    color: #fff;
+    border: none;
+  }
+
+
+  .bal-label {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+
+  .bal-big {
+    font-size: 28px;
+    font-weight: 900;
+    margin: 6px 0 12px;
+  }
+
+
+  .bal-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+
+  .bal-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+
+  /* PORTAL KLIENTA (IZOLOWANY WIDOK TYLKO DO ODCZYTU) */
+  .client-portal-banner {
+    background: linear-gradient(135deg, #15803d, #b45309);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+
+  /* MODALE */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+
+  .modal-backdrop.open {
+    display: flex;
+  }
+
+
+  .modal-box {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 480px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+
+  .modal-close {
+    background: var(--surface-alt);
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+
+  .modal-receipt-img {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #f5f5f4;
+  }
+
+
+  /* TOAST POWIADOMIENIA */
+  .toast {
+    position: fixed;
+    top: 74px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #1c1917;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 200;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  }
+
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+
+  .hidden {
+    display: none !important;
+  }
+</style>
+</head>
+<body>
+
+
+<div id="toast" class="toast">Gotowe</div>
+
+
+<!-- NAGŁÓWEK -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-badge">⏱</div>
+      <div>
+        <div class="brand-title" id="headerTitle">Work &amp; Finance PWA</div>
+        <div class="brand-sub">
+          <span class="sync-dot"></span>
+          <span id="headerSubtitle">Zsynchronizowano • Kursy z dnia operacji</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- KONTROLKI WŁAŚCICIELA -->
+    <div class="owner-controls" id="ownerHeaderControls">
+      <select id="activeClientSelect" class="client-select" aria-label="Wybierz klienta"></select>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnOpenAddClient">+ Klient</button>
+      <button type="button" class="btn btn-primary btn-sm" id="btnOpenShareLink">🔗 Udostępnij link klienta</button>
+      <button type="button" class="btn btn-outline btn-sm" id="btnToggleDark" title="Przełącz tryb ciemny">🌓</button>
+    </div>
+
+
+    <!-- KONTROLKI WIDOKU KLIENTA -->
+    <div class="owner-controls hidden" id="clientHeaderControls">
+      <button type="button" class="btn btn-primary btn-sm" id="btnExitClientView">← Wróć do Panelu Właściciela</button>
+      <button type="button" class="btn btn-outline btn-sm" id="btnToggleDarkClient" title="Przełącz tryb ciemny">🌓</button>
+    </div>
+  </div>
+</header>
+
+
+<!-- GŁÓWNY KONTENER -->
+<div class="app-layout">
+
+
+  <!-- NAWIGACJA BOCZNA (TABLET / DESKTOP) -->
+  <aside class="sidebar" id="desktopSidebar">
+    <button type="button" class="nav-btn active" data-tab="time">⏱ Czas pracy</button>
+    <button type="button" class="nav-btn" data-tab="tasks">🛠 Zadania / Dzieło</button>
+    <button type="button" class="nav-btn" data-tab="expenses">🧾 Wydatki i Paragony</button>
+    <button type="button" class="nav-btn" data-tab="balance">💰 Balans i Wpłaty</button>
+  </aside>
+
+
+  <!-- OBSZAR TREŚCI -->
+  <main class="main-content">
+
+
+    <!-- BANER WIDOKU KLIENTA (WIDOCZNY TYLKO W TRYBIE KLIENTA) -->
+    <div id="clientPortalBanner" class="client-portal-banner hidden">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.9;">
+          🔒 Bezpieczny podgląd rozliczeń • Tylko do odczytu
+        </div>
+        <div style="font-size: 17px; font-weight: 800; margin-top: 2px;" id="clientPortalName">Klient</div>
+      </div>
+      <div style="font-size: 12px; background: rgba(255,255,255,0.18); padding: 6px 10px; border-radius: 10px; font-weight: 700;">
+        Widok iPhone / Web
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ZAKŁADKA 1: CZAS PRACY                     -->
+    <!-- ========================================== -->
+    <section id="tab-time" class="tab-section">
+      <!-- PANEL STOPERA (TYLKO WŁAŚCICIEL) -->
+      <div class="card owner-only" style="margin-bottom: 16px;">
+        <div class="card-title">
+          <span>⏱ Rejestracja czasu pracy</span>
+          <span class="badge" id="timeClientBadge">Klient</span>
+        </div>
+
+
+        <div class="stopwatch-box">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-muted);" id="stopwatchStatus">Stoper zatrzymany</div>
+          <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
+          <div class="stopwatch-actions">
+            <button type="button" class="btn btn-primary" id="btnTimerStart">▶ Start</button>
+            <button type="button" class="btn btn-secondary" id="btnTimerPause" disabled>⏸ Pauza</button>
+            <button type="button" class="btn btn-success" id="btnTimerSave" disabled>💾 Zapisz sesję</button>
+          </div>
+        </div>
+
+
+        <div class="form-grid form-grid-2">
+          <div class="field" id="timeTargetClientField" style="display:none;">
+            <label>Przypisz do klienta</label>
+            <select id="timeManualClient"></select>
+          </div>
+          <div class="field">
+            <label>Opis wykonywanej pracy</label>
+            <input type="text" id="timeDescInput" placeholder="np. Diagnostyka silnika i instalacja">
+          </div>
+          <div class="field">
+            <label>Stawka godzinowa i waluta</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="timeRateInput" value="150" min="1" step="5" style="flex: 1;">
+              <select id="timeCurrencyInput" style="width: 95px;">
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;">
+          <div class="field" style="flex: 1; min-width: 120px;">
+            <label>Lub dopisz ręcznie (godziny)</label>
+            <input type="number" id="manualHoursInput" placeholder="np. 2.5" step="0.25" min="0.1">
+          </div>
+          <button type="button" class="btn btn-secondary" id="btnAddManualHours">+ Dodaj godziny ręcznie</button>
+        </div>
+      </div>
+
+
+      <!-- LISTA SESJI CZASU PRACY -->
+      <div class="card">
+        <div class="card-title">
+          <span>📋 Zarejestrowany czas pracy</span>
+          <span class="badge" id="totalHoursSummary">0.00 h</span>
+        </div>
+        <div class="item-list" id="timeList"></div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- ZAKŁADKA 2: ZADANIA / DZIEŁO               -->
+    <!-- ========================================== -->
+    <section id="tab-tasks" class="tab-section hidden">
+      <div class="card owner-only" style="margin-bottom: 16px;">
+        <div class="card-title">
+          <span>🛠 Nowe zadanie o dzieło (Akord)</span>
+          <span class="badge">Stała kwota</span>
+        </div>
+        <div class="form-grid form-grid-2">
+          <div class="field" id="taskTargetClientField" style="display:none;">
+            <label>Klient</label>
+            <select id="taskClientSelect"></select>
+          </div>
+          <div class="field">
+            <label>Opis zadania / dzieła</label>
+            <input type="text" id="taskTitleInput" placeholder="np. Wykonanie rozdzielnicy elektrycznej">
+          </div>
+          <div class="field">
+            <label>Kwota i waluta</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="taskAmountInput" placeholder="0.00" step="0.01" min="0" style="flex: 1;">
+              <select id="taskCurrencyInput" style="width: 95px;">
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Status rozliczenia</label>
+            <select id="taskStatusInput">
+              <option value="done">Zakończone do rozliczenia</option>
+              <option value="in_progress">W trakcie realizacji</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <button type="button" class="btn btn-primary" id="btnAddTask" style="width: 100%;">+ Dodaj zadanie o dzieło</button>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-title">
+          <span>📦 Lista zadań akordowych</span>
+          <span class="badge" id="tasksCountBadge">0</span>
+        </div>
+        <div class="item-list" id="tasksList"></div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- ZAKŁADKA 3: WYDATKI I PARAGONY             -->
+    <!-- ========================================== -->
+    <section id="tab-expenses" class="tab-section hidden">
+      <div class="card owner-only" style="margin-bottom: 16px;">
+        <div class="card-title">
+          <span>🧾 Dodaj wydatek / paragon</span>
+          <span class="badge">Zdjęcie z aparatu lub galerii</span>
+        </div>
+        <div class="form-grid form-grid-2">
+          <div class="field" id="expTargetClientField" style="display:none;">
+            <label>Klient</label>
+            <select id="expClientSelect"></select>
+          </div>
+          <div class="field">
+            <label>Data i godzina wydatku (domyślnie teraz)</label>
+            <input type="datetime-local" id="expDateInput">
+          </div>
+          <div class="field">
+            <label>Co to za wydatek?</label>
+            <input type="text" id="expDescInput" placeholder="np. Obiad w trasie, części zamienne">
+          </div>
+          <div class="field">
+            <label>Kwota i waluta</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="expAmountInput" placeholder="0.00" step="0.01" min="0" style="flex: 1;">
+              <select id="expCurrencyInput" style="width: 95px;">
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Sposób płatności</label>
+            <select id="expPaymentMethodInput">
+              <option value="Moja karta">💳 Moja karta (do zwrotu)</option>
+              <option value="Gotówka">💵 Gotówka (do zwrotu)</option>
+              <option value="Karta klienta">🏢 Karta klienta (informacyjnie)</option>
+            </select>
+          </div>
+        </div>
+
+
+        <!-- ZAŁĄCZANIE PARAGONU: APARAT + GALERIA + DEMO -->
+        <div class="field" style="margin-top: 12px;">
+          <label>Zdjęcie paragonu / rachunku</label>
+          <input type="file" id="cameraFileInput" accept="image/*" capture="environment" class="hidden">
+          <input type="file" id="galleryFileInput" accept="image/*" class="hidden">
+
+
+          <div class="receipt-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnTriggerCamera">📷 Zrób zdjęcie (Aparat)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnTriggerGallery">🖼 Wybierz z galerii</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btnDemoReceipt">✨ + Demo paragon</button>
+          </div>
+
+
+          <div id="receiptPreviewBox" class="receipt-preview-strip hidden">
+            <img id="receiptPreviewImg" class="receipt-thumb" src="" alt="Podgląd paragonu">
+            <div style="flex: 1; font-size: 12px;">
+              <strong id="receiptPreviewName">Paragon załączony</strong>
+              <div style="color: var(--text-muted);">Gotowy do zapisu z wydatkiem</div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" id="btnClearReceipt">Usuń</button>
+          </div>
+        </div>
+
+
+        <div style="margin-top: 14px;">
+          <button type="button" class="btn btn-primary" id="btnAddExpense" style="width: 100%;">💾 Zapisz wydatek</button>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-title">
+          <span>📂 Historia wydatków (kliknij pozycję, aby zobaczyć paragon)</span>
+          <span class="badge" id="expensesCountBadge">0</span>
+        </div>
+        <div class="item-list" id="expensesList"></div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- ZAKŁADKA 4: BALANS I WPŁATY                -->
+    <!-- ========================================== -->
+    <section id="tab-balance" class="tab-section hidden">
+      <!-- PRZEŁĄCZNIK WALUTY PODSUMOWANIA -->
+      <div class="currency-bar">
+        <div>
+          <div style="font-size: 13px; font-weight: 800;">💱 Waluta przeliczenia bilansu</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Przeliczanie w locie wg kursu z dnia operacji</div>
+        </div>
+        <div class="cur-pills" id="displayCurrencyPills">
+          <button type="button" class="cur-pill active" data-cur="PLN">PLN</button>
+          <button type="button" class="cur-pill" data-cur="EUR">EUR</button>
+          <button type="button" class="cur-pill" data-cur="USD">USD</button>
+          <button type="button" class="cur-pill" data-cur="AUD">AUD</button>
+        </div>
+      </div>
+
+
+      <!-- KARTY BALANSU -->
+      <div class="balance-grid" id="balanceCardsGrid">
+        <!-- KARTA AKTYWNEGO KLIENTA -->
+        <div class="bal-card">
+          <div class="bal-label" id="balClientCardTitle">Balans z wybranym klientem</div>
+          <div class="bal-big" id="balClientNet">0.00 PLN</div>
+          <div class="bal-breakdown">
+            <div class="bal-row"><span>⏱ Czas pracy:</span><strong id="balClientTime">0.00 PLN</strong></div>
+            <div class="bal-row"><span>🛠 Zadania / Dzieło:</span><strong id="balClientTasks">0.00 PLN</strong></div>
+            <div class="bal-row"><span>🧾 Wydatki (Moja karta / Gotówka):</span><strong id="balClientExpenses">0.00 PLN</strong></div>
+            <div class="bal-row" style="color: var(--success);"><span>💵 Otrzymane wpłaty:</span><strong id="balClientPayments">- 0.00 PLN</strong></div>
+          </div>
+        </div>
+
+
+        <!-- KARTA BALANSU TOTALNEGO (UKRYTA W WIDOKU KLIENTA) -->
+        <div class="bal-card total-highlight owner-only" id="balTotalCard">
+          <div class="bal-label">🏦 Balans Totalny (Wszyscy klienci)</div>
+          <div class="bal-big" id="balTotalNet">0.00 PLN</div>
+          <div style="font-size: 12px; opacity: 0.92; line-height: 1.5;">
+            Łączna kwota zawieszonych środków do rozliczenia ze wszystkich aktywnych projektów i klientów.
+          </div>
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 12px; display: flex; justify-content: space-between;">
+            <span>Suma wpłat ogółem:</span>
+            <strong id="balTotalPaid">0.00 PLN</strong>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- TABELA SALD WSZYSTKICH KLIENTÓW (TYLKO WŁAŚCICIEL) -->
+      <div class="card owner-only">
+        <div class="card-title">
+          <span>📊 Zestawienie sald według klientów (kliknij, aby przełączyć)</span>
+        </div>
+        <div class="item-list" id="allClientsBalanceList"></div>
+      </div>
+
+
+      <!-- FORMULARZ WPŁATY OD KLIENTA (TYLKO WŁAŚCICIEL) -->
+      <div class="card owner-only">
+        <div class="card-title">
+          <span>💵 Zaksięguj wpłatę od klienta</span>
+        </div>
+        <div class="form-grid form-grid-2">
+          <div class="field">
+            <label>Kto wpłaca?</label>
+            <select id="payClientSelect"></select>
+          </div>
+          <div class="field">
+            <label>Kwota i waluta wpłaty</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="payAmountInput" placeholder="0.00" step="0.01" min="0" style="flex: 1;">
+              <select id="payCurrencyInput" style="width: 95px;">
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Data wpłaty</label>
+            <input type="date" id="payDateInput">
+          </div>
+          <div class="field">
+            <label>Forma wpłaty / notatka</label>
+            <input type="text" id="payNoteInput" placeholder="np. Przelew zaliczkowy / Gotówka">
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <button type="button" class="btn btn-success" id="btnAddPayment" style="width: 100%;">+ Zapisz wpłatę od klienta</button>
+        </div>
+      </div>
+
+
+      <!-- HISTORIA WPŁAT -->
+      <div class="card">
+        <div class="card-title">
+          <span>📜 Historia otrzymanych wpłat</span>
+          <span class="badge badge-green" id="paymentsCountBadge">0</span>
+        </div>
+        <div class="item-list" id="paymentsList"></div>
+      </div>
+    </section>
+
+
+  </main>
+</div>
+
+
+<!-- DOLNA NAWIGACJA MOBILNA -->
+<nav class="bottom-nav" id="mobileBottomNav">
+  <button type="button" class="bnav-btn active" data-tab="time">
+    <span class="bnav-icon">⏱</span>
+    <span>Czas</span>
+  </button>
+  <button type="button" class="bnav-btn" data-tab="tasks">
+    <span class="bnav-icon">🛠</span>
+    <span>Dzieło</span>
+  </button>
+  <button type="button" class="bnav-btn" data-tab="expenses">
+    <span class="bnav-icon">🧾</span>
+    <span>Wydatki</span>
+  </button>
+  <button type="button" class="bnav-btn" data-tab="balance">
+    <span class="bnav-icon">💰</span>
+    <span>Balans</span>
+  </button>
+</nav>
+
+
+<!-- ========================================== -->
+<!-- MODAL 1: PODGLĄD PARAGONU                  -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 16px; font-weight: 800;" id="modalReceiptTitle">Podgląd paragonu</h3>
+      <button type="button" class="modal-close" data-close-modal="receiptModal">✕</button>
+    </div>
+    <div id="modalReceiptMeta" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></div>
+    <img id="modalReceiptImg" class="modal-receipt-img" src="" alt="Paragon">
+    <div id="modalNoReceiptMsg" class="hidden" style="padding: 24px; text-align: center; background: var(--surface-soft); border-radius: 12px; font-size: 13px; color: var(--text-muted);">
+      Brak załączonego zdjęcia rachunku dla tej pozycji.
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- MODAL 2: DODAWANIE NOWEGO KLIENTA          -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="addClientModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 16px; font-weight: 800;">➕ Dodaj nowego klienta</h3>
+      <button type="button" class="modal-close" data-close-modal="addClientModal">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Nazwa klienta / Projektu</label>
+        <input type="text" id="newClientName" placeholder="np. Jan Zieliński - Remont łodzi">
+      </div>
+      <div class="field">
+        <label>Domyślna waluta rozliczeń</label>
+        <select id="newClientCurrency">
+          <option value="PLN">PLN (Polski Złoty)</option>
+          <option value="EUR">EUR (Euro)</option>
+          <option value="USD">USD (Dolar amerykański)</option>
+          <option value="AUD">AUD (Dolar australijski)</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" id="btnSaveNewClient" style="width: 100%;">Zapisz klienta</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- MODAL 3: UDOSTĘPNIANIE LINKU KLIENTA       -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="shareLinkModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 16px; font-weight: 800;">🔗 Bezpieczny link dla klienta</h3>
+      <button type="button" class="modal-close" data-close-modal="shareLinkModal">✕</button>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+      Wybierz klienta, aby wygenerować jego prywatny link (działa na iPhone i każdym telefonie bez konta Google, w trybie tylko do odczytu).
+    </p>
+    <div class="field" style="margin-bottom: 12px;">
+      <label>Klient docelowy</label>
+      <select id="shareClientSelect"></select>
+    </div>
+    <div class="field" style="margin-bottom: 14px;">
+      <label>Unikalny link z tokenem dostępu</label>
+      <input type="text" id="generatedShareUrl" readonly style="font-family: monospace; font-size: 12px; background: var(--surface-alt);">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button type="button" class="btn btn-secondary" id="btnCopyShareUrl" style="width: 100%;">📋 Kopiuj link do schowka</button>
+      <button type="button" class="btn btn-primary" id="btnLaunchClientPreview" style="width: 100%;">📱 Otwórz podgląd klienta (jak na iPhone)</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function() {
+  "use strict";
+
+
+  // Helper generujący realistyczne zdjęcie paragonu na Canvasie (zero zewnętrznych URL)
+  function generateReceiptDataUrl(storeName, itemDesc, amountText, dateText) {
+    try {
+      var canvas = document.createElement("canvas");
+      canvas.width = 420;
+      canvas.height = 520;
+      var ctx = canvas.getContext("2d");
+
+
+      ctx.fillStyle = "#fffdf7";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+      ctx.strokeStyle = "#d6d3d1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+
+      ctx.fillStyle = "#1c1917";
+      ctx.font = "bold 20px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(storeName.toUpperCase(), canvas.width / 2, 62);
+
+
+      ctx.font = "13px monospace";
+      ctx.fillStyle = "#57534e";
+      ctx.fillText("PARAGON FISKALNY", canvas.width / 2, 88);
+      ctx.fillText("DATA: " + dateText, canvas.width / 2, 110);
+
+
+      ctx.beginPath();
+      ctx.setLineDash([6, 4]);
+      ctx.moveTo(32, 132);
+      ctx.lineTo(canvas.width - 32, 132);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#1c1917";
+      ctx.font = "15px monospace";
+      ctx.fillText(itemDesc.slice(0, 30), 36, 172);
+
+
+      ctx.textAlign = "right";
+      ctx.fillText(amountText, canvas.width - 36, 172);
+
+
+      ctx.beginPath();
+      ctx.setLineDash([6, 4]);
+      ctx.moveTo(32, 210);
+      ctx.lineTo(canvas.width - 32, 210);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+
+      ctx.textAlign = "left";
+      ctx.font = "bold 20px monospace";
+      ctx.fillText("SUMA PLN/WAL:", 36, 255);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#c2410c";
+      ctx.fillText(amountText, canvas.width - 36, 255);
+
+
+      // Kod kreskowy na dole
+      ctx.fillStyle = "#1c1917";
+      var barX = 70;
+      for (var i = 0; i < 45; i++) {
+        var w = (i % 3 === 0) ? 4 : 2;
+        ctx.fillRect(barX, 340, w, 75);
+        barX += w + 3;
+      }
+
+
+      ctx.textAlign = "center";
+      ctx.font = "12px monospace";
+      ctx.fillStyle = "#78716c";
+      ctx.fillText("ARCHIWUM CYFROWE PWA • SYNCHRONIZACJA", canvas.width / 2, 455);
+
+
+      return canvas.toDataURL("image/png");
+    } catch (e) {
+      return "";
+    }
+  }
+
+
+  // STAN APLIKACJI W PAMIĘCI (BEZ localStorage)
+  var state = {
+    viewMode: "owner", // "owner" | "client"
+    clientModeId: "c1",
+    activeTab: "time",
+    selectedClientId: "c1", // "ALL" lub ID klienta
+    displayCurrency: "PLN",
+    // Kursy walut względem PLN (1 jednostka waluty = X PLN)
+    fxRatesToPLN: {
+      PLN: 1.00,
+      EUR: 4.32,
+      USD: 4.02,
+      AUD: 2.65
+    },
+    clients: [
+      { id: "c1", name: "Marek Kowalski - Jacht Vis", defaultCurrency: "PLN", token: "vis_89a2f1" },
+      { id: "c2", name: "Anna Nowak - Apartamenty", defaultCurrency: "EUR", token: "now_44c9b2" },
+      { id: "c3", name: "Piotr Wiśniewski - Serwis", defaultCurrency: "USD", token: "wis_71e0d8" }
+    ],
+    timeEntries: [
+      { id: "t1", clientId: "c1", date: "2026-11-10", desc: "Przegląd instalacji elektrycznej na jachcie", hours: 4.5, rate: 150, currency: "PLN", rateToPLN: 1.00 },
+      { id: "t2", clientId: "c2", date: "2026-11-09", desc: "Montaż automatyki oświetlenia i sterowników", hours: 6.0, rate: 45, currency: "EUR", rateToPLN: 4.30 },
+      { id: "t3", clientId: "c3", date: "2026-11-08", desc: "Kalibracja czujników i diagnostyka silnika", hours: 3.0, rate: 55, currency: "USD", rateToPLN: 4.00 }
+    ],
+    tasks: [
+      { id: "k1", clientId: "c1", date: "2026-11-07", title: "Wykonanie głównej rozdzielnicy 12V/230V", amount: 1850, currency: "PLN", rateToPLN: 1.00, status: "done" },
+      { id: "k2", clientId: "c2", date: "2026-11-10", title: "Konfiguracja systemu rezerwacji i zamków", amount: 420, currency: "EUR", rateToPLN: 4.32, status: "done" },
+      { id: "k3", clientId: "c3", date: "2026-11-11", title: "Modernizacja układu chłodzenia (etap II)", amount: 650, currency: "AUD", rateToPLN: 2.65, status: "in_progress" }
+    ],
+    expenses: [
+      {
+        id: "e1",
+        clientId: "c1",
+        dateTime: "2026-11-10 13:45",
+        desc: "Obiad w trakcie serwisu w marinie",
+        amount: 68.50,
+        currency: "PLN",
+        rateToPLN: 1.00,
+        paymentMethod: "Moja karta",
+        receiptImg: generateReceiptDataUrl("Bistro Portowe", "Zestaw obiadowy serwis", "68.50 PLN", "2026-11-10 13:45")
+      },
+      {
+        id: "e2",
+        clientId: "c1",
+        dateTime: "2026-11-09 10:20",
+        desc: "Przewody morskie cynowane i konektory",
+        amount: 340.00,
+        currency: "PLN",
+        rateToPLN: 1.00,
+        paymentMethod: "Gotówka",
+        receiptImg: generateReceiptDataUrl("Hurtownia Elektro-Marine", "Przewody + złącza IP68", "340.00 PLN", "2026-11-09 10:20")
+      },
+      {
+        id: "e3",
+        clientId: "c2",
+        dateTime: "2026-11-09 16:10",
+        desc: "Moduły przekaźnikowe Wi-Fi (zakup UE)",
+        amount: 95.00,
+        currency: "EUR",
+        rateToPLN: 4.30,
+        paymentMethod: "Moja karta",
+        receiptImg: generateReceiptDataUrl("TechSupply Berlin GmbH", "Moduły DIN Wi-Fi x4", "95.00 EUR", "2026-11-09 16:10")
+      },
+      {
+        id: "e4",
+        clientId: "c1",
+        dateTime: "2026-11-08 09:15",
+        desc: "Paliwo do agregatu (karta firmowa klienta)",
+        amount: 210.00,
+        currency: "PLN",
+        rateToPLN: 1.00,
+        paymentMethod: "Karta klienta",
+        receiptImg: generateReceiptDataUrl("Stacja Paliw Orlen", "Olej napędowy Verva", "210.00 PLN", "2026-11-08 09:15")
+      }
+    ],
+    payments: [
+      { id: "p1", clientId: "c1", date: "2026-11-06", amount: 1500.00, currency: "PLN", rateToPLN: 1.00, note: "Zaliczka na rozdzielnicę i materiały" },
+      { id: "p2", clientId: "c2", date: "2026-11-08", amount: 350.00, currency: "EUR", rateToPLN: 4.31, note: "Przelew częściowy za automatykę" }
+    ],
+    pendingReceipt: null,
+    timer: {
+      running: false,
+      elapsedSeconds: 0,
+      intervalId: null
+    }
+  };
+
+
+  // POMOCNICY
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+
+  function showToast(msg) {
+    var toast = $("toast");
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function() {
+      toast.classList.remove("show");
+    }, 2600);
+  }
+
+
+  function getClientById(id) {
+    for (var i = 0; i < state.clients.length; i++) {
+      if (state.clients[i].id === id) return state.clients[i];
+    }
+    return state.clients[0];
+  }
+
+
+  function getEffectiveClientId() {
+    if (state.viewMode === "client") return state.clientModeId;
+    return state.selectedClientId;
+  }
+
+
+  function formatMoney(amount, currency) {
+    return amount.toFixed(2) + " " + currency;
+  }
+
+
+  // Konwersja z waluty oryginalnej (wg kursu z dnia operacji) do wybranej waluty podsumowania
+  function convertToDisplayCurrency(amount, rateToPLN) {
+    var inPLN = amount * (rateToPLN || 1);
+    var targetRate = state.fxRatesToPLN[state.displayCurrency] || 1;
+    return inPLN / targetRate;
+  }
+
+
+  function formatSeconds(sec) {
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    var s = sec % 60;
+    return (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+  }
+
+
+  function setDefaultDateInputs() {
+    var now = new Date();
+    var yyyy = now.getFullYear();
+    var mm = String(now.getMonth() + 1).padStart(2, "0");
+    var dd = String(now.getDate()).padStart(2, "0");
+    var hh = String(now.getHours()).padStart(2, "0");
+    var min = String(now.getMinutes()).padStart(2, "0");
+
+
+    if ($("expDateInput")) $("expDateInput").value = yyyy + "-" + mm + "-" + dd + "T" + hh + ":" + min;
+    if ($("payDateInput")) $("payDateInput").value = yyyy + "-" + mm + "-" + dd;
+  }
+
+
+  // OBLICZENIA FINANSOWE
+  function calculateClientLedger(clientId) {
+    var timeSum = 0;
+    var tasksSum = 0;
+    var expReimbursableSum = 0;
+    var paymentsSum = 0;
+
+
+    state.timeEntries.forEach(function(item) {
+      if (clientId === "ALL" || item.clientId === clientId) {
+        var origVal = item.hours * item.rate;
+        timeSum += convertToDisplayCurrency(origVal, item.rateToPLN);
+      }
+    });
+
+
+    state.tasks.forEach(function(item) {
+      if ((clientId === "ALL" || item.clientId === clientId) && item.status === "done") {
+        tasksSum += convertToDisplayCurrency(item.amount, item.rateToPLN);
+      }
+    });
+
+
+    state.expenses.forEach(function(item) {
+      if (clientId === "ALL" || item.clientId === clientId) {
+        if (item.paymentMethod === "Moja karta" || item.paymentMethod === "Gotówka") {
+          expReimbursableSum += convertToDisplayCurrency(item.amount, item.rateToPLN);
+        }
+      }
+    });
+
+
+    state.payments.forEach(function(item) {
+      if (clientId === "ALL" || item.clientId === clientId) {
+        paymentsSum += convertToDisplayCurrency(item.amount, item.rateToPLN);
+      }
+    });
+
+
+    var net = (timeSum + tasksSum + expReimbursableSum) - paymentsSum;
+    return {
+      timeSum: timeSum,
+      tasksSum: tasksSum,
+      expReimbursableSum: expReimbursableSum,
+      paymentsSum: paymentsSum,
+      net: net
+    };
+  }
+
+
+  // RENDEROWANIE SELEKTORÓW KLIENTÓW
+  function renderClientSelectors() {
+    var mainSel = $("activeClientSelect");
+    var prevVal = state.selectedClientId;
+
+
+    var optionsHtml = '<option value="ALL">📊 Wszyscy klienci (widok zbiorczy)</option>';
+    var clientOnlyOptions = "";
+
+
+    state.clients.forEach(function(c) {
+      optionsHtml += '<option value="' + c.id + '">' + c.name + ' (' + c.defaultCurrency + ')</option>';
+      clientOnlyOptions += '<option value="' + c.id + '">' + c.name + '</option>';
+    });
+
+
+    mainSel.innerHTML = optionsHtml;
+    mainSel.value = prevVal;
+
+
+    $("timeManualClient").innerHTML = clientOnlyOptions;
+    $("taskClientSelect").innerHTML = clientOnlyOptions;
+    $("expClientSelect").innerHTML = clientOnlyOptions;
+    $("payClientSelect").innerHTML = clientOnlyOptions;
+    $("shareClientSelect").innerHTML = clientOnlyOptions;
+
+
+    var isAll = (state.selectedClientId === "ALL");
+    $("timeTargetClientField").style.display = isAll ? "flex" : "none";
+    $("taskTargetClientField").style.display = isAll ? "flex" : "none";
+    $("expTargetClientField").style.display = isAll ? "flex" : "none";
+
+
+    if (!isAll) {
+      var activeC = getClientById(state.selectedClientId);
+      $("timeClientBadge").textContent = activeC.name;
+      $("payClientSelect").value = activeC.id;
+      $("shareClientSelect").value = activeC.id;
+      $("timeCurrencyInput").value = activeC.defaultCurrency;
+      $("taskCurrencyInput").value = activeC.defaultCurrency;
+      $("expCurrencyInput").value = activeC.defaultCurrency;
+      $("payCurrencyInput").value = activeC.defaultCurrency;
+    } else {
+      $("timeClientBadge").textContent = "Wszyscy klienci";
+    }
+  }
+
+
+  // RENDEROWANIE ZAKŁADEK I WIDOKU
+  function renderAll() {
+    try {
+      var effectiveId = getEffectiveClientId();
+      var isClientMode = (state.viewMode === "client");
+
+
+      // Przełączanie trybu Właściciel vs Klient
+      $("ownerHeaderControls").classList.toggle("hidden", isClientMode);
+      $("clientHeaderControls").classList.toggle("hidden", !isClientMode);
+      $("clientPortalBanner").classList.toggle("hidden", !isClientMode);
+
+
+      var ownerElements = document.querySelectorAll(".owner-only");
+      ownerElements.forEach(function(el) {
+        el.classList.toggle("hidden", isClientMode);
+      });
+
+
+      if (isClientMode) {
+        var cObj = getClientById(effectiveId);
+        $("clientPortalName").textContent = cObj.name;
+        $("headerTitle").textContent = cObj.name;
+        $("headerSubtitle").textContent = "Panel Klienta • Tylko do odczytu";
+      } else {
+        $("headerTitle").textContent = "Work & Finance PWA";
+        $("headerSubtitle").textContent = "Zsynchronizowano • Kursy z dnia operacji";
+      }
+
+
+      // 1. LISTA CZASU PRACY
+      var filteredTime = state.timeEntries.filter(function(t) {
+        return effectiveId === "ALL" || t.clientId === effectiveId;
+      });
+      var sumHours = 0;
+      var timeHtml = "";
+      filteredTime.forEach(function(t) {
+        sumHours += t.hours;
+        var cName = getClientById(t.clientId).name;
+        var val = (t.hours * t.rate).toFixed(2);
+        timeHtml +=
+          '<div class="list-item">' +
+            '<div class="item-main">' +
+              '<div class="item-title">' + t.desc + '</div>' +
+              '<div class="item-meta">' +
+                '<span>📅 ' + t.date + '</span>' +
+                (effectiveId === "ALL" ? '<span class="badge">' + cName + '</span>' : '') +
+                '<span>⏱ ' + t.hours.toFixed(2) + ' h × ' + t.rate + ' ' + t.currency + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="item-amount">' + val + ' ' + t.currency + '</div>' +
+          '</div>';
+      });
+      $("totalHoursSummary").textContent = sumHours.toFixed(2) + " h";
+      $("timeList").innerHTML = timeHtml || '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px;">Brak wpisów czasu pracy dla tego widoku.</div>';
+
+
+      // 2. LISTA ZADAŃ / DZIEŁO
+      var filteredTasks = state.tasks.filter(function(k) {
+        return effectiveId === "ALL" || k.clientId === effectiveId;
+      });
+      $("tasksCountBadge").textContent = filteredTasks.length;
+      var tasksHtml = "";
+      filteredTasks.forEach(function(k) {
+        var cName = getClientById(k.clientId).name;
+        var statusBadge = k.status === "done"
+          ? '<span class="badge badge-green">✔ Zakończone do rozliczenia</span>'
+          : '<span class="badge">⏳ W trakcie</span>';
+        var toggleBtn = (!isClientMode)
+          ? '<button type="button" class="btn btn-outline btn-sm" data-toggle-task="' + k.id + '" style="margin-top:6px;">Zmień status</button>'
+          : '';
+        tasksHtml +=
+          '<div class="list-item">' +
+            '<div class="item-main">' +
+              '<div class="item-title">' + k.title + '</div>' +
+              '<div class="item-meta">' +
+                '<span>📅 ' + k.date + '</span>' +
+                (effectiveId === "ALL" ? '<span class="badge">' + cName + '</span>' : '') +
+                statusBadge +
+              '</div>' +
+              toggleBtn +
+            '</div>' +
+            '<div class="item-amount">' + k.amount.toFixed(2) + ' ' + k.currency + '</div>' +
+          '</div>';
+      });
+      $("tasksList").innerHTML = tasksHtml || '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px;">Brak zadań akordowych.</div>';
+
+
+      // 3. LISTA WYDATKÓW
+      var filteredExp = state.expenses.filter(function(e) {
+        return effectiveId === "ALL" || e.clientId === effectiveId;
+      });
+      $("expensesCountBadge").textContent = filteredExp.length;
+      var expHtml = "";
+      filteredExp.forEach(function(e) {
+        var cName = getClientById(e.clientId).name;
+        var hasPhoto = e.receiptImg ? '<span class="badge badge-green">🧾 Paragon</span>' : '<span class="badge">Brak zdjęcia</span>';
+        expHtml +=
+          '<div class="list-item clickable" data-view-receipt="' + e.id + '">' +
+            '<div class="item-main">' +
+              '<div class="item-title">' + e.desc + '</div>' +
+              '<div class="item-meta">' +
+                '<span>🕒 ' + e.dateTime + '</span>' +
+                (effectiveId === "ALL" ? '<span class="badge">' + cName + '</span>' : '') +
+                '<span>' + e.paymentMethod + '</span>' +
+                hasPhoto +
+              '</div>' +
+            '</div>' +
+            '<div class="item-amount" style="color:var(--terracotta);">-' + e.amount.toFixed(2) + ' ' + e.currency + '</div>' +
+          '</div>';
+      });
+      $("expensesList").innerHTML = expHtml || '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px;">Brak zarejestrowanych wydatków.</div>';
+
+
+      // 4. BALANS I WPŁATY
+      var cur = state.displayCurrency;
+      var clientLedger = calculateClientLedger(effectiveId);
+      $("balClientCardTitle").textContent = (effectiveId === "ALL")
+        ? "Podsumowanie wszystkich klientów"
+        : "Balans: " + getClientById(effectiveId).name;
+
+
+      $("balClientNet").textContent = formatMoney(clientLedger.net, cur);
+      $("balClientTime").textContent = formatMoney(clientLedger.timeSum, cur);
+      $("balClientTasks").textContent = formatMoney(clientLedger.tasksSum, cur);
+      $("balClientExpenses").textContent = formatMoney(clientLedger.expReimbursableSum, cur);
+      $("balClientPayments").textContent = "- " + formatMoney(clientLedger.paymentsSum, cur);
+
+
+      var totalLedger = calculateClientLedger("ALL");
+      $("balTotalNet").textContent = formatMoney(totalLedger.net, cur);
+      $("balTotalPaid").textContent = formatMoney(totalLedger.paymentsSum, cur);
+
+
+      // Zestawienie sald per klient
+      var allBalHtml = "";
+      state.clients.forEach(function(c) {
+        var led = calculateClientLedger(c.id);
+        var colorStyle = led.net > 0 ? "color:var(--terracotta);" : "color:var(--success);";
+        allBalHtml +=
+          '<div class="list-item clickable" data-switch-client="' + c.id + '">' +
+            '<div class="item-main">' +
+              '<div class="item-title">' + c.name + '</div>' +
+              '<div class="item-meta">Domyślna waluta: ' + c.defaultCurrency + ' • Kliknij, by przełączyć</div>' +
+            '</div>' +
+            '<div class="item-amount" style="' + colorStyle + '">' + formatMoney(led.net, cur) + '</div>' +
+          '</div>';
+      });
+      $("allClientsBalanceList").innerHTML = allBalHtml;
+
+
+      // Lista wpłat
+      var filteredPays = state.payments.filter(function(p) {
+        return effectiveId === "ALL" || p.clientId === effectiveId;
+      });
+      $("paymentsCountBadge").textContent = filteredPays.length;
+      var paysHtml = "";
+      filteredPays.forEach(function(p) {
+        var cName = getClientById(p.clientId).name;
+        paysHtml +=
+          '<div class="list-item">' +
+            '<div class="item-main">' +
+              '<div class="item-title">' + (p.note || "Wpłata rozliczeniowa") + '</div>' +
+              '<div class="item-meta">' +
+                '<span>📅 ' + p.date + '</span>' +
+                (effectiveId === "ALL" ? '<span class="badge">' + cName + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="item-amount" style="color:var(--success);">+' + p.amount.toFixed(2) + ' ' + p.currency + '</div>' +
+          '</div>';
+      });
+      $("paymentsList").innerHTML = paysHtml || '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px;">Brak wpłat dla wybranego zakresu.</div>';
+
+
+    } catch (err) {
+      console.error("Błąd renderowania:", err);
+    }
+  }
+
+
+  // PRZEŁĄCZANIE ZAKŁADEK
+  function switchTab(tabName) {
+    state.activeTab = tabName;
+    document.querySelectorAll(".tab-section").forEach(function(sec) {
+      sec.classList.add("hidden");
+    });
+    var activeSec = $("tab-" + tabName);
+    if (activeSec) activeSec.classList.remove("hidden");
+
+
+    document.querySelectorAll(".nav-btn, .bnav-btn").forEach(function(btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
+    });
+  }
+
+
+  // LOGIKA STOPERA
+  function startTimer() {
+    if (state.timer.running) return;
+    state.timer.running = true;
+    $("stopwatchStatus").textContent = "⏳ Stoper pracuje (liczenie lokalne)...";
+    $("btnTimerStart").disabled = true;
+    $("btnTimerPause").disabled = false;
+    $("btnTimerSave").disabled = false;
+
+
+    state.timer.intervalId = setInterval(function() {
+      state.timer.elapsedSeconds++;
+      $("stopwatchDisplay").textContent = formatSeconds(state.timer.elapsedSeconds);
+    }, 1000);
+  }
+
+
+  function pauseTimer() {
+    state.timer.running = false;
+    clearInterval(state.timer.intervalId);
+    $("stopwatchStatus").textContent = "⏸ Wstrzymano";
+    $("btnTimerStart").disabled = false;
+    $("btnTimerPause").disabled = true;
+  }
+
+
+  function saveTimerSession() {
+    pauseTimer();
+    var sec = state.timer.elapsedSeconds;
+    var hours = Math.max(0.1, Math.round((sec / 3600) * 100) / 100);
+    var clientId = (state.selectedClientId === "ALL") ? $("timeManualClient").value : state.selectedClientId;
+    var desc = $("timeDescInput").value.trim() || "Praca serwisowa (stoper)";
+    var rate = parseFloat($("timeRateInput").value) || 150;
+    var currency = $("timeCurrencyInput").value;
+    var today = new Date().toISOString().slice(0, 10);
+
+
+    state.timeEntries.unshift({
+      id: "t_" + Date.now(),
+      clientId: clientId,
+      date: today,
+      desc: desc,
+      hours: hours,
+      rate: rate,
+      currency: currency,
+      rateToPLN: state.fxRatesToPLN[currency] || 1
+    });
+
+
+    state.timer.elapsedSeconds = 0;
+    $("stopwatchDisplay").textContent = "00:00:00";
+    $("stopwatchStatus").textContent = "Stoper zatrzymany";
+    $("btnTimerSave").disabled = true;
+    $("timeDescInput").value = "";
+
+
+    renderAll();
+    showToast("Zapisano sesję: " + hours.toFixed(2) + " h");
+  }
+
+
+  // OBSŁUGA PLIKÓW PARAGONU (APARAT + GALERIA)
+  function handleImageFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      state.pendingReceipt = ev.target.result;
+      $("receiptPreviewImg").src = state.pendingReceipt;
+      $("receiptPreviewName").textContent = file.name || "Zdjęcie paragonu";
+      $("receiptPreviewBox").classList.remove("hidden");
+      showToast("Załączono zdjęcie paragonu");
+    };
+    reader.readAsDataURL(file);
+  }
+
+
+  // AKTUALIZACJA LINKU UDOSTĘPNIANIA KLIENTA
+  function updateShareModalUrl() {
+    var cId = $("shareClientSelect").value;
+    var cObj = getClientById(cId);
+    $("generatedShareUrl").value = "https://app.twojadomena.pl/?token=" + cObj.token;
+  }
+
+
+  // INICJALIZACJA ZDARZEŃ PO ZAŁADOWANIU DOM
+  document.addEventListener("DOMContentLoaded", function() {
+    try {
+      setDefaultDateInputs();
+      renderClientSelectors();
+      renderAll();
+
+
+      // Zmiana aktywnego klienta
+      $("activeClientSelect").addEventListener("change", function(e) {
+        state.selectedClientId = e.target.value;
+        renderClientSelectors();
+        renderAll();
+      });
+
+
+      // Tryb ciemny
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+        showToast(document.body.classList.contains("dark") ? "Włączono tryb ciemny" : "Włączono tryb dzienny");
+      }
+      $("btnToggleDark").addEventListener("click", toggleDarkMode);
+      $("btnToggleDarkClient").addEventListener("click", toggleDarkMode);
+
+
+      // Stoper
+      $("btnTimerStart").addEventListener("click", startTimer);
+      $("btnTimerPause").addEventListener("click", pauseTimer);
+      $("btnTimerSave").addEventListener("click", saveTimerSession);
+
+
+      // Ręczne dodawanie godzin
+      $("btnAddManualHours").addEventListener("click", function() {
+        var hours = parseFloat($("manualHoursInput").value);
+        if (!hours || hours <= 0) {
+          showToast("Podaj poprawną liczbę godzin");
+          return;
+        }
+        var clientId = (state.selectedClientId === "ALL") ? $("timeManualClient").value : state.selectedClientId;
+        var desc = $("timeDescInput").value.trim() || "Prace projektowe (wpis ręczny)";
+        var rate = parseFloat($("timeRateInput").value) || 150;
+        var currency = $("timeCurrencyInput").value;
+        var today = new Date().toISOString().slice(0, 10);
+
+
+        state.timeEntries.unshift({
+          id: "t_" + Date.now(),
+          clientId: clientId,
+          date: today,
+          desc: desc,
+          hours: hours,
+          rate: rate,
+          currency: currency,
+          rateToPLN: state.fxRatesToPLN[currency] || 1
+        });
+
+
+        $("manualHoursInput").value = "";
+        $("timeDescInput").value = "";
+        renderAll();
+        showToast("Dodano " + hours.toFixed(2) + " h");
+      });
+
+
+      // Dodawanie zadania o dzieło
+      $("btnAddTask").addEventListener("click", function() {
+        var title = $("taskTitleInput").value.trim();
+        var amount = parseFloat($("taskAmountInput").value);
+        if (!title || !amount || amount <= 0) {
+          showToast("Wpisz opis zadania i kwotę");
+          return;
+        }
+        var clientId = (state.selectedClientId === "ALL") ? $("taskClientSelect").value : state.selectedClientId;
+        var currency = $("taskCurrencyInput").value;
+        var status = $("taskStatusInput").value;
+        var today = new Date().toISOString().slice(0, 10);
+
+
+        state.tasks.unshift({
+          id: "k_" + Date.now(),
+          clientId: clientId,
+          date: today,
+          title: title,
+          amount: amount,
+          currency: currency,
+          rateToPLN: state.fxRatesToPLN[currency] || 1,
+          status: status
+        });
+
+
+        $("taskTitleInput").value = "";
+        $("taskAmountInput").value = "";
+        renderAll();
+        showToast("Dodano zadanie o dzieło");
+      });
+
+
+      // Aparat / Galeria / Demo paragon
+      $("btnTriggerCamera").addEventListener("click", function() {
+        $("cameraFileInput").click();
+      });
+      $("btnTriggerGallery").addEventListener("click", function() {
+        $("galleryFileInput").click();
+      });
+      $("cameraFileInput").addEventListener("change", function(e) {
+        if (e.target.files && e.target.files[0]) handleImageFile(e.target.files[0]);
+      });
+      $("galleryFileInput").addEventListener("change", function(e) {
+        if (e.target.files && e.target.files[0]) handleImageFile(e.target.files[0]);
+      });
+      $("btnDemoReceipt").addEventListener("click", function() {
+        var desc = $("expDescInput").value.trim() || "Zakup materiałów / posiłek";
+        var amt = parseFloat($("expAmountInput").value) || 85.00;
+        var cur = $("expCurrencyInput").value;
+        var dt = ($("expDateInput").value || "2026-11-11T12:00").replace("T", " ");
+        state.pendingReceipt = generateReceiptDataUrl("Punkt Handlowo-Usługowy", desc, amt.toFixed(2) + " " + cur, dt);
+        $("receiptPreviewImg").src = state.pendingReceipt;
+        $("receiptPreviewName").textContent = "Paragon_Demo.png";
+        $("receiptPreviewBox").classList.remove("hidden");
+        showToast("Wygenerowano Demo paragon");
+      });
+      $("btnClearReceipt").addEventListener("click", function() {
+        state.pendingReceipt = null;
+        $("receiptPreviewBox").classList.add("hidden");
+        $("cameraFileInput").value = "";
+        $("galleryFileInput").value = "";
+      });
+
+
+      // Zapis wydatku
+      $("btnAddExpense").addEventListener("click", function() {
+        var desc = $("expDescInput").value.trim();
+        var amount = parseFloat($("expAmountInput").value);
+        if (!desc || !amount || amount <= 0) {
+          showToast("Podaj opis wydatku i poprawną kwotę");
+          return;
+        }
+        var clientId = (state.selectedClientId === "ALL") ? $("expClientSelect").value : state.selectedClientId;
+        var currency = $("expCurrencyInput").value;
+        var paymentMethod = $("expPaymentMethodInput").value;
+        var rawDt = $("expDateInput").value;
+        var formattedDt = rawDt ? rawDt.replace("T", " ") : "2026-11-11 12:00";
+
+
+        state.expenses.unshift({
+          id: "e_" + Date.now(),
+          clientId: clientId,
+          dateTime: formattedDt,
+          desc: desc,
+          amount: amount,
+          currency: currency,
+          rateToPLN: state.fxRatesToPLN[currency] || 1,
+          paymentMethod: paymentMethod,
+          receiptImg: state.pendingReceipt
+        });
+
+
+        $("expDescInput").value = "";
+        $("expAmountInput").value = "";
+        state.pendingReceipt = null;
+        $("receiptPreviewBox").classList.add("hidden");
+        setDefaultDateInputs();
+        renderAll();
+        showToast("Zapisano wydatek: " + amount.toFixed(2) + " " + currency);
+      });
+
+
+      // Dodawanie wpłaty od klienta
+      $("btnAddPayment").addEventListener("click", function() {
+        var amount = parseFloat($("payAmountInput").value);
+        if (!amount || amount <= 0) {
+          showToast("Podaj poprawną kwotę wpłaty");
+          return;
+        }
+        var clientId = $("payClientSelect").value;
+        var currency = $("payCurrencyInput").value;
+        var date = $("payDateInput").value || new Date().toISOString().slice(0, 10);
+        var note = $("payNoteInput").value.trim() || "Wpłata od klienta";
+
+
+        state.payments.unshift({
+          id: "p_" + Date.now(),
+          clientId: clientId,
+          date: date,
+          amount: amount,
+          currency: currency,
+          rateToPLN: state.fxRatesToPLN[currency] || 1,
+          note: note
+        });
+
+
+        $("payAmountInput").value = "";
+        $("payNoteInput").value = "";
+        renderAll();
+        showToast("Zaksięgowano wpłatę: +" + amount.toFixed(2) + " " + currency);
+      });
+
+
+      // Modal nowego klienta
+      $("btnOpenAddClient").addEventListener("click", function() {
+        $("addClientModal").classList.add("open");
+      });
+      $("btnSaveNewClient").addEventListener("click", function() {
+        var name = $("newClientName").value.trim();
+        if (!name) {
+          showToast("Wpisz nazwę klienta");
+          return;
+        }
+        var cur = $("newClientCurrency").value;
+        var newId = "c_" + Date.now();
+        var token = "cli_" + Math.random().toString(36).substring(2, 8);
+        state.clients.push({ id: newId, name: name, defaultCurrency: cur, token: token });
+        state.selectedClientId = newId;
+        $("newClientName").value = "";
+        $("addClientModal").classList.remove("open");
+        renderClientSelectors();
+        renderAll();
+        showToast("Dodano klienta: " + name);
+      });
+
+
+      // Modal udostępniania linku klienta
+      $("btnOpenShareLink").addEventListener("click", function() {
+        updateShareModalUrl();
+        $("shareLinkModal").classList.add("open");
+      });
+      $("shareClientSelect").addEventListener("change", updateShareModalUrl);
+
+
+      $("btnCopyShareUrl").addEventListener("click", function() {
+        var urlInput = $("generatedShareUrl");
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999);
+        try {
+          document.execCommand("copy");
+          showToast("Skopiowano link klienta do schowka!");
+        } catch (e) {
+          showToast("Zaznaczono link — skopiuj go ręcznie");
+        }
+      });
+
+
+      $("btnLaunchClientPreview").addEventListener("click", function() {
+        state.clientModeId = $("shareClientSelect").value;
+        state.viewMode = "client";
+        $("shareLinkModal").classList.remove("open");
+        renderAll();
+        showToast("Przełączono na izolowany widok klienta");
+      });
+
+
+      $("btnExitClientView").addEventListener("click", function() {
+        state.viewMode = "owner";
+        renderClientSelectors();
+        renderAll();
+        showToast("Powrót do panelu właściciela");
+      });
+
+
+      // DELEGACJA ZDARZEŃ DLA DYNAMICZNYCH PRZYCISKÓW I LIST
+      document.body.addEventListener("click", function(e) {
+        // Zakładki nawigacji
+        var tabBtn = e.target.closest("[data-tab]");
+        if (tabBtn) {
+          switchTab(tabBtn.getAttribute("data-tab"));
+          return;
+        }
+
+
+        // Waluta przeliczania bilansu
+        var curBtn = e.target.closest("[data-cur]");
+        if (curBtn) {
+          state.displayCurrency = curBtn.getAttribute("data-cur");
+          document.querySelectorAll(".cur-pill").forEach(function(p) {
+            p.classList.toggle("active", p.getAttribute("data-cur") === state.displayCurrency);
+          });
+          renderAll();
+          return;
+        }
+
+
+        // Zmiana statusu zadania o dzieło
+        var taskToggle = e.target.closest("[data-toggle-task]");
+        if (taskToggle) {
+          var tId = taskToggle.getAttribute("data-toggle-task");
+          state.tasks.forEach(function(k) {
+            if (k.id === tId) {
+              k.status = (k.status === "done") ? "in_progress" : "done";
+            }
+          });
+          renderAll();
+          showToast("Zaktualizowano status zadania");
+          return;
+        }
+
+
+        // Podgląd paragonu po kliknięciu wydatku
+        var expItem = e.target.closest("[data-view-receipt]");
+        if (expItem) {
+          var eId = expItem.getAttribute("data-view-receipt");
+          var found = null;
+          for (var i = 0; i < state.expenses.length; i++) {
+            if (state.expenses[i].id === eId) {
+              found = state.expenses[i];
+              break;
+            }
+          }
+          if (found) {
+            $("modalReceiptTitle").textContent = found.desc;
+            $("modalReceiptMeta").textContent =
+              found.dateTime + " • " + found.amount.toFixed(2) + " " + found.currency + " (" + found.paymentMethod + ")";
+            if (found.receiptImg) {
+              $("modalReceiptImg").src = found.receiptImg;
+              $("modalReceiptImg").classList.remove("hidden");
+              $("modalNoReceiptMsg").classList.add("hidden");
+            } else {
+              $("modalReceiptImg").classList.add("hidden");
+              $("modalNoReceiptMsg").classList.remove("hidden");
+            }
+            $("receiptModal").classList.add("open");
+          }
+          return;
+        }
+
+
+        // Szybkie przełączenie klienta z tabeli sald
+        var switchClientEl = e.target.closest("[data-switch-client]");
+        if (switchClientEl) {
+          state.selectedClientId = switchClientEl.getAttribute("data-switch-client");
+          renderClientSelectors();
+          renderAll();
+          showToast("Wybrano: " + getClientById(state.selectedClientId).name);
+          return;
+        }
+
+
+        // Zamykanie modali
+        var closeBtn = e.target.closest("[data-close-modal]");
+        if (closeBtn) {
+          var modalId = closeBtn.getAttribute("data-close-modal");
+          $(modalId).classList.remove("open");
+          return;
+        }
+
+
+        if (e.target.classList.contains("modal-backdrop")) {
+          e.target.classList.remove("open");
+        }
+      });
+
+
+    } catch (initErr) {
+      console.error("Błąd inicjalizacji:", initErr);
+    }
+  });
+})();
+</script>
+</body>
+</html>
+```
